@@ -1,0 +1,76 @@
+#!/bin/bash
+
+mode="$1"
+script_name="$2"
+
+usage() {
+    cat <<EOF
+Usage: $0 <mode> [script_name]
+Modes:
+  install | instal | i     Install dependencies and GLAD (installs to /usr/local/include/glad)
+  build   | b <name>       Compile <name>.cpp -> ./<name>
+  draw    | d <name>       Build (if needed) then run ./<name> (runs the binary)
+  run     | r <name>       Run ./<name>
+Examples:
+  $0 install
+  $0 build my_app
+  $0 draw my_app
+EOF
+    exit 1
+}
+
+install() {
+    sudo apt install g++ cmake make \
+        libglfw3-dev libgl1-mesa-dev libglu1-mesa-dev
+
+    sudo apt update 
+    sudo apt install g++ cmake make \
+        libglfw3-dev libgl1-mesa-dev libglu1-mesa-dev
+
+    wget https://glad.dav1d.de/generated/tmp2oyehfihglad/glad.zip
+    unzip ./glad.zip
+
+    mv ./src/glad.c .
+    rm -R ./src
+
+    sudo mv include/* /usr/local/include/
+    rm -R ./include
+    echo "Successfully install dependencies"
+}
+
+draw() {
+    eval "g++ ${script_name}.cpp glad.c -lglfw -lGL -ldl -o ${script_name}"
+    eval "./${script_name}"
+}
+
+build() {
+    eval "g++ ${script_name}.cpp glad.c -lglfw -lGL -ldl -o ${script_name}"
+}
+
+run() {
+    eval "./${script_name}"
+}
+
+case "${mode}" in
+    install|instal|i)
+        install
+        ;;
+    build|b)
+        [[ -z "${script_name}" ]] && usage
+        build "${script_name}"
+        ;;
+    draw|d)
+        [[ -z "${script_name}" ]] && usage
+        build "${script_name}" || true
+        "./${script_name}"
+        ;;
+    run|r)
+        [[ -z "${script_name}" ]] && usage
+        run "${script_name}"
+        ;;
+    *)
+        usage
+        ;;
+esac
+
+echo "Developed by SASA."
